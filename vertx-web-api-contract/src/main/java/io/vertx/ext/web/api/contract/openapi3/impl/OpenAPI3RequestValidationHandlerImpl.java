@@ -9,6 +9,7 @@ import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.api.RequestParameter;
 import io.vertx.ext.web.api.contract.impl.HTTPOperationRequestValidationHandlerImpl;
+import io.vertx.ext.web.api.contract.openapi3.OpenAPI3Options;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RequestValidationHandler;
 import io.vertx.ext.web.api.validation.*;
 import io.vertx.ext.web.api.validation.impl.*;
@@ -72,13 +73,16 @@ public class OpenAPI3RequestValidationHandlerImpl extends HTTPOperationRequestVa
 
   List<Parameter> resolvedParameters;
   OpenAPI spec;
+  OpenAPI3Options openAPI3Options;
 
   /* --- Initialization functions --- */
 
-  public OpenAPI3RequestValidationHandlerImpl(Operation pathSpec, List<Parameter> resolvedParameters, OpenAPI spec) {
+  public OpenAPI3RequestValidationHandlerImpl(Operation pathSpec, List<Parameter> resolvedParameters, OpenAPI spec,
+                                              OpenAPI3Options openAPI3Options) {
     super(pathSpec);
     this.resolvedParameters = resolvedParameters;
     this.spec = spec;
+    this.openAPI3Options = openAPI3Options;
     parseOperationSpec();
   }
 
@@ -106,6 +110,14 @@ public class OpenAPI3RequestValidationHandlerImpl extends HTTPOperationRequestVa
       return ParameterTypeValidator.createEnumTypeValidatorWithInnerValidator(new ArrayList(schema.getEnum()), this
         .resolveInnerSchemaPrimitiveTypeValidator(schema, false));
     }
+
+    if (openAPI3Options.getCustomValidators().containsKey(schema.getType())) {
+      final OpenAPI3Options.ParameterValidator format = openAPI3Options.getCustomValidators().get(schema.getType());
+      if (schema.getType().equalsIgnoreCase(format.getName())) {
+        return format.getValidator();
+      }
+    }
+
     switch (schema.getType()) {
       case "integer":
         if (schema.getFormat() != null && schema.getFormat().equals("int64")) {

@@ -40,12 +40,14 @@ public class OpenAPI3ParametersUnitTest extends WebTestValidationBase {
   OpenAPI spec;
   ApiClient apiClient;
   OpenAPI3RouterFactory routerFactory;
+  OpenAPI3Options openAPI3Options;
 
   @Rule
   public ExternalResource resource = new ExternalResource() {
     @Override
     protected void before() throws Throwable {
       spec = loadSwagger("./src/test/resources/swaggers/openapi_parameters_compatibility_spec.yaml");
+      openAPI3Options = new OpenAPI3Options();
     }
 
     @Override
@@ -57,7 +59,7 @@ public class OpenAPI3ParametersUnitTest extends WebTestValidationBase {
     super.setUp();
     stopServer(); // Have to stop default server of WebTestBase
     apiClient = new io.vertx.ext.web.api.contract.openapi3.ApiClient(webClient);
-    routerFactory = new OpenAPI3RouterFactoryImpl(this.vertx, spec);
+    routerFactory = new OpenAPI3RouterFactoryImpl(this.vertx, spec, openAPI3Options);
     routerFactory.setOptions(
       new RouterFactoryOptions()
         .setRequireSecurityHandlers(false)

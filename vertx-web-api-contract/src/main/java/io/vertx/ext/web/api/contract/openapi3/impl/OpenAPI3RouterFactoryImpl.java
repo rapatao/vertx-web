@@ -13,6 +13,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.api.contract.RouterFactoryException;
 import io.vertx.ext.web.api.contract.impl.BaseRouterFactory;
+import io.vertx.ext.web.api.contract.openapi3.OpenAPI3Options;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 import io.vertx.ext.web.handler.ResponseContentTypeHandler;
 
@@ -28,6 +29,8 @@ public class OpenAPI3RouterFactoryImpl extends BaseRouterFactory<OpenAPI> implem
   Map<String, OperationValue> operations;
 
   SecurityHandlersStore securityHandlers;
+
+  OpenAPI3Options openAPI3Options;
 
   private class OperationValue {
     private HttpMethod method;
@@ -89,10 +92,11 @@ public class OpenAPI3RouterFactoryImpl extends BaseRouterFactory<OpenAPI> implem
     }
   }
 
-  public OpenAPI3RouterFactoryImpl(Vertx vertx, OpenAPI spec) {
+  public OpenAPI3RouterFactoryImpl(Vertx vertx, OpenAPI spec, OpenAPI3Options openAPI3Options) {
     super(vertx, spec);
     this.operations = new LinkedHashMap<>();
     this.securityHandlers = new SecurityHandlersStore();
+    this.openAPI3Options = openAPI3Options;
 
     /* --- Initialization of all arrays and maps --- */
     for (Map.Entry<String, ? extends PathItem> pathEntry : spec.getPaths().entrySet()) {
@@ -218,7 +222,7 @@ public class OpenAPI3RouterFactoryImpl extends BaseRouterFactory<OpenAPI> implem
 
       // Generate ValidationHandler
       Handler<RoutingContext> validationHandler = new OpenAPI3RequestValidationHandlerImpl(operation
-        .getOperationModel(), operation.getParameters(), this.spec);
+        .getOperationModel(), operation.getParameters(), this.spec, this.openAPI3Options);
       handlersToLoad.add(validationHandler);
 
       // Check validation failure handler
